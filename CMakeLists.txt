@@ -8,11 +8,13 @@ find_package(Sofa.Core REQUIRED)
 set(HEADER_FILES
     ${SOFA_FENICS_SRC}/config.h.in
     ${SOFA_FENICS_SRC}/forcefield/HyperElasticForceField.h
+    ${SOFA_FENICS_SRC}/forcefield/Material.h
 )
 
 set(SOURCE_FILES
     ${SOFA_FENICS_SRC}/init.cpp
     ${SOFA_FENICS_SRC}/forcefield/HyperElasticForceField.cpp
+    ${SOFA_FENICS_SRC}/forcefield/Material.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})

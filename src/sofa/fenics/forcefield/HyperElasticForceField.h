@@ -4,13 +4,16 @@
 #include <sofa/fenics/config.h>
 #include <sofa/core/behavior/ForceField.h>
 #include <sofa/core/objectmodel/DataFileName.h>
+#include <sofa/core/topology/BaseTopology.h>
 #include <sofa/linearalgebra/BaseMatrix.h>
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <functional>
 #include <array>
 
-namespace sofa::fenics::forcefield
+#include <sofa/fenics/forcefield/Material.h>
+
+namespace sofa::fenics
 {
 
 using sofa::linearalgebra::BaseMatrix;
@@ -22,7 +25,7 @@ template<class DataTypes>
 class HyperElasticForceField : public ForceField<DataTypes> {
 
 private:
-    using Self      = sofa::fenics::forcefield::HyperElasticForceField<DataTypes>;
+    using Self      = sofa::fenics::HyperElasticForceField<DataTypes>;
     using VecCoord  = typename DataTypes::VecCoord;
     using VecDeriv  = typename DataTypes::VecDeriv;
     using Coord     = typename DataTypes::Coord;
@@ -31,10 +34,6 @@ private:
 
     template <typename ObjectType>
     using Link = sofa::core::objectmodel::SingleLink<Self, ObjectType, sofa::core::objectmodel::BaseLink::FLAG_STRONGLINK>;
-
-    DataFileName d_material_file;
-    Data<std::string> d_element;
-    Data<int> d_element_order;
 
 public:
     SOFA_CLASS(SOFA_TEMPLATE(HyperElasticForceField, DataTypes), SOFA_TEMPLATE(ForceField, DataTypes));
@@ -101,6 +100,9 @@ public:
 
     //template <typename Derived>
     //void assemble_stiffness(const Eigen::MatrixBase<Derived> & x, const Eigen::MatrixBase<Derived> & x0);
+
+    Link<UfcxMaterial> l_material;
+    Link<core::topology::TopologyContainer> l_topology;
 
 private:
 
