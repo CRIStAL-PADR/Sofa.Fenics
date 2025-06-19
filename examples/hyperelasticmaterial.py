@@ -58,11 +58,13 @@ def __genericAdd(self : Sofa.Core.Node, typeName, **kwargs):
             pref = self.addObject(typeName, **params)
         else:
             raise RuntimeError("Invalid argument", typeName)
+
     except Exception as e: 
         pref = self.addObject(InvalidComponent(name="Error"))
         Sofa.msg_error(pref, f"Invalid argument {typeName}")
         Sofa.msg_error(self, str(e))
         return None
+
     return pref
 
 # Inject the method so it become available as if it was part of Sofa.Core.Node
@@ -70,14 +72,17 @@ Sofa.Core.Node.add = __genericAdd
 
 def createScene(root):
     root.add(Node, name="Modelling")
-    root.Modelling.add("MeshVTKLoader", filename="mesh/liver.vtk")
+    root.Modelling.add("MeshGmshLoader", filename="mesh/cube_low_res.msh")
     root.Modelling.add("TetrahedronSetTopologyContainer",
                        name="topology", src=root.Modelling.linkpath)
     
     root.Modelling.add("MechanicalObject", name="state")
+
+    root.Modelling.add("UfcxMaterial", name="material", filename="fenics.so")
     root.Modelling.add("HyperElasticForceField", 
-                       name="forcefied", 
-                       material_file="material.py", )
+                       name="forcefied",
+                       topology=root.Modelling.topology.linkpath,
+                       material=root.Modelling.material.linkpath, )
 
     root.add(Node, name="Simulation")
     root.Simulation.add("EulerImplicitSolver")

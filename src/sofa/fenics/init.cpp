@@ -3,7 +3,7 @@
 
 namespace sofa::fenics
 {
-
+    void registerUfcxMaterial(sofa::core::ObjectFactory* factory);
     void registerHyperElasticForceField(sofa::core::ObjectFactory* factory);
 }
 
@@ -15,7 +15,6 @@ extern "C" {
     SOFA_FENICS_API const char* getModuleDescription();
     SOFA_FENICS_API void registerObjects(sofa::core::ObjectFactory* factory);
 }
-
 
 void initExternalModule()
 {
@@ -49,4 +48,5 @@ const char* getModuleDescription()
 void registerObjects(sofa::core::ObjectFactory* factory)
 {
     sofa::fenics::registerHyperElasticForceField(factory);
+    sofa::fenics::registerUfcxMaterial(factory);
 }

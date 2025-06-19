@@ -15,19 +15,28 @@ using sofa::core::objectmodel::DataFileName;
 class UfcxMaterial : public sofa::core::objectmodel::BaseObject
 {
 public:
-    DataFileName d_material_file;
+    SOFA_CLASS(UfcxMaterial, BaseObject);
+
+    DataFileName d_filename;
     Data<std::string> d_element;
     Data<int> d_element_order;
 
+    UfcxMaterial();
+
+    void init() override;
+
+    // interface to retrieve the ufcx informations
     const ufcx_integral* getFunctionF();
     const ufcx_integral* getFunctionK();
-
+    const ufcx_integral* getFunctionPi();
     std::vector<double> getParameters();
 
 private:
     using Self      = sofa::fenics::UfcxMaterial;
 
-    UfcxMaterial();
+    ufcx_integral* ufcxComputeF {nullptr};
+    ufcx_integral* ufcxComputeJ {nullptr};
+    ufcx_integral* ufcxComputePi {nullptr};
 };
 
 }

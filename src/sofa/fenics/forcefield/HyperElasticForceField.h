@@ -22,8 +22,8 @@ using sofa::core::objectmodel::Data;
 using sofa::core::objectmodel::DataFileName;
 
 template<class DataTypes>
-class HyperElasticForceField : public ForceField<DataTypes> {
-
+class HyperElasticForceField : public ForceField<DataTypes>
+{
 private:
     using Self      = sofa::fenics::HyperElasticForceField<DataTypes>;
     using VecCoord  = typename DataTypes::VecCoord;

@@ -6,16 +6,48 @@ namespace sofa::fenics
 
 using Eigen::Matrix;
 
-template<class DataTypes> HyperElasticForceField<DataTypes>::HyperElasticForceField()
+template<class DataTypes> HyperElasticForceField<DataTypes>::HyperElasticForceField() :
+    l_topology(initLink("topology", "link to the container holding the topology"))
+   ,l_material(initLink("material", "link to the UfcxMaterial to use as mechanical law"))
 {
 }
 
 template<class DataTypes>
-void HyperElasticForceField<DataTypes>::init(){}
+void HyperElasticForceField<DataTypes>::init(){
+    if(!l_topology.get())
+    {
+        msg_error() << "Missing topology container";
+        Inherit1::d_componentState.setValue(sofa::core::objectmodel::ComponentState::Invalid);
+    }
+    if(!l_material.get())
+    {
+        msg_error() << "Missing material";
+        Inherit1::d_componentState.setValue(sofa::core::objectmodel::ComponentState::Invalid);
+    }
+
+    if(!l_material->isComponentStateValid())
+    {
+        msg_error() << "Invalid material";
+        Inherit1::d_componentState.setValue(sofa::core::objectmodel::ComponentState::Invalid);
+    }
+
+    std::cout << " SET COMPOENT TO VALID" << std::endl;
+    Inherit1::d_componentState.setValue(sofa::core::objectmodel::ComponentState::Valid);
+}
 
 template<class DataTypes>
 void HyperElasticForceField<DataTypes>::addForce(const sofa::core::MechanicalParams* mparams, sofa::core::MultiVecDerivId fId)
 {
+    std::cout << "ADD FORCE... " << std::endl;
+    if(!Inherit1::isComponentStateValid())
+         return;
+
+    std::cout << "ADD FORCE WITH COMPONENT STATE... " << std::endl;
+
+    if (!Inherit1::mstate)
+        return;
+
+    std::cout << "ADDING A VALID " << std::endl;
 }
 
 template<class DataTypes>
@@ -31,14 +63,13 @@ void HyperElasticForceField<DataTypes>::addForce(
         const sofa::core::objectmodel::Data<VecCoord>& d_x,
         const sofa::core::objectmodel::Data<VecDeriv>& d_v)
 {
-    using namespace sofa::core::objectmodel;
+
+        using namespace sofa::core::objectmodel;
        using namespace sofa::helper;
 
        SOFA_UNUSED(mparams);
        SOFA_UNUSED(d_v);
 
-       if (!this->mstate)
-           return;
 
        //if(d_material->MaterialIsAvailable()) {
        //    msg_error() << "No material named " << d_material->getMaterialName() << " available";
@@ -78,8 +109,8 @@ void HyperElasticForceField<DataTypes>::addForce(
        for (auto element : elements)
        {
            // Fetch the initial and current positions of the element's nodes
-           Matrix<Real, Eigen::Dynamic, NumberOfNodesPerElement, Dimension> current_nodes_position;
-           Matrix<Real, Eigen::Dynamic, NumberOfNodesPerElement, Dimension> coefficients;
+           Matrix<Real, NumberOfNodesPerElement, Dimension> current_nodes_position;
+           Matrix<Real, NumberOfNodesPerElement, Dimension> coefficients;
 
            for (std::size_t i = 0; i < NumberOfNodesPerElement; ++i) {
                const auto t = element[i];
