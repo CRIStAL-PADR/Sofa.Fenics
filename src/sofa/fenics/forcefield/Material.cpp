@@ -1,5 +1,8 @@
 #include <sofa/fenics/forcefield/Material.h>
 #include <sofa/helper/system/DynamicLibrary.h>
+#include <SofaPython3/PythonEnvironment.h>
+#include <sofa/helper/system/FileSystem.h>
+
 namespace sofa::fenics
 {
 
@@ -21,9 +24,29 @@ void UfcxMaterial::init()
         return;
 
     auto filename = d_filename.getFullPath();
-    std::cout << "Loading file " << filename << std::endl;
+    auto extension = d_filename.getExtension();
+    std::cout << "FILE is " << filename << " extensions " << extension << std::endl;
 
-    auto handle = DynamicLibrary::load(filename);
+    std::string binaryMaterial="";
+    if(extension == ".c" || sofa::helper::system::FileSystem::exists(filename))
+    {
+        std::cout << "Compiling material from " << filename << std::endl;
+
+        std::cout << "Compiling file to binary " << filename << std::endl;
+
+        sofapython3::PythonEnvironment::executePython([&filename,&binaryMaterial](){
+            std::cout << "YO LO" << filename << std::endl;
+            auto res = pybind11::eval("Sofa.livecoding.compile('"+filename+"')");
+            binaryMaterial = pybind11::cast<std::string>(res);
+        });
+    }else{
+        binaryMaterial = filename;
+    }
+
+    std::cout << "Loading file " << filename << std::endl;
+    std::cout << "Loading binary file " << binaryMaterial << std::endl;
+
+    auto handle = DynamicLibrary::load(binaryMaterial);
 
     ufcx_form* ufcxFormF = *reinterpret_cast<ufcx_form**>(DynamicLibrary::getSymbolAddress(handle, "form_SaintVenantKirchhoff_Tetra_F"));
     if( ufcxFormF->num_integrals(ufcx_integral_type::cell) != 1 )
@@ -33,9 +56,6 @@ void UfcxMaterial::init()
         d_componentState = core::objectmodel::ComponentState::Invalid;
     }
 
-    // Retrieve
-    ufcxComputeF = ufcxFormF->integrals(ufcx_integral_type::cell)[0];
-
     // Retrieve the constants from ufcx and map them to a data field
     auto data = new Data<std::string>("",true,false);
     data->setName("signature");
@@ -43,15 +63,6 @@ void UfcxMaterial::init()
     data->setDisplayed(true);
     data->setValue(ufcxFormF->signature);
     addData(data, data->getName());
-
-    for(int i=0;i<ufcxFormF->num_constants;i++)
-    {
-        auto data = new Data<float>("",true,false);
-        data->setName(ufcxFormF->constant_name_map()[i]);
-        data->setGroup("Constants");
-        data->setDisplayed(true);
-        addData(data, data->getName());
-    }
 
     // Do the same for the field
     for(int i=0;i<ufcxFormF->num_coefficients;i++)
@@ -62,6 +73,18 @@ void UfcxMaterial::init()
         data->setDisplayed(true);
         addData(data, data->getName());
     }
+
+    for(int i=0;i<ufcxFormF->num_constants;i++)
+    {
+        auto data = new Data<float>("",true,false);
+        data->setName(ufcxFormF->constant_name_map()[i]);
+        data->setGroup("Ufcx Constants");
+        data->setDisplayed(true);
+        addData(data, data->getName());
+    }
+
+    // Retrieve
+    ufcxComputeF = ufcxFormF->integrals(ufcx_integral_type::cell)[0];
 
     d_componentState = core::objectmodel::ComponentState::Valid;
 }

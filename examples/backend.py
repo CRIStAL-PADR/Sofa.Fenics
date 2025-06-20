@@ -1,33 +1,42 @@
-"""Compilation backend for Sofa.Fenics"""
+import sys
+from setuptools import Distribution, Extension
+from setuptools.command.build_ext import build_ext
+import os
 
-import ffcx.main
+def compile(name):
+    # Création de l'extension C
+    ext_modules = [
+        Extension(
+            name="fenics_tmp",
+            sources=[name],
+            extra_compile_args=["-O2"]
+        )
+    ]
 
-def compile_to_c_code():
-    import ffcx
-    import ffcx.main
+    realname = name.split(".")[0]
+    # Configuration de la distribution (sans setup.py)
+    dist = Distribution({
+        "name": "fenics_tmp",
+        "ext_modules": ext_modules,
+    })
 
-    ffcx.main.main(["fenics-hyperelasticity.py"])
+    # Configuration et exécution de la commande build_ext
+    cmd = build_ext(dist)
+    cmd.ensure_finalized()
+    cmd.run()
 
-def compile_to_binary():
-    from cffi import FFI
-    ffibuilder = FFI()
+    # Affichage du chemin du fichier compilé
+    for ext in cmd.get_outputs():
+        print(f"✅ Fichier compilé : {ext}")
 
-    ffibuilder.cdef("float pi_approx(int n);")
-    ffibuilder.cdef("void* get_fenics_function();")
+    import shutil
+    for output in cmd.get_outputs():
+        if output.endswith((".so", ".pyd", ".dll", ".dylib")):
+            tokens = output.split(".")
+            shortname, extension = ext_modules[0].name, tokens[-1]
+            newname = "./"+shortname+"."+extension
+            print(f"NAME: {newname}")
+            shutil.copy(output, newname)
+            print(f"📦 Copié dans ./ : {newname}")    
 
-    ffibuilder.set_source("_fenics2",  # name of the output C extension
-        """
-        #include "fenics.h"
-        #include "ufcx.h"
-        """,
-        sources=['fenics.c'],   # includes pi.c as additional sources
-        libraries=['m'])        # on Unix, link with the math library
-
-    ffibuilder.compile(verbose=True, debug=False)
-
-    import _fenics2
-    return _fenics2
-
-
-compile_to_c_code()
-compile_to_binary()
+compile("fenics.c")

@@ -78,7 +78,7 @@ def createScene(root):
     
     root.Modelling.add("MechanicalObject", name="state")
 
-    root.Modelling.add("UfcxMaterial", name="material", filename="fenics.so")
+    root.Modelling.add("UfcxMaterial", name="material", filename="fenics.c")
     root.Modelling.add("HyperElasticForceField", 
                        name="forcefied",
                        topology=root.Modelling.topology.linkpath,
